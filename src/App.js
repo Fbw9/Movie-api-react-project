@@ -1,25 +1,44 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import Tabs from './components/Tabs'
+import List from './components/List'
+import { nowShowingUrl, topRatedUrl } from './api/ApiConfig'
+import axios from 'axios'
 
 class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      selectedType: "now_showing"
+      selectedType: "now_showing", 
+    }
+
+  }
+
+  onTabSelected = selectedType => {
+    switch(selectedType) {
+      case "top_rated":
+      axios.get(topRatedUrl).then(response => {
+        this.setState({
+          topRated: response.data.results, 
+          selectedType
+        })
+      })
+      break;
+      case "now_showing":
+      axios.get(nowShowingUrl).then(response => {
+        this.setState({
+          nowShowing: response.data.results,
+          selectedType
+        })
+      }
+        )
+      break;
     }
   }
   
-  onTabChange = event => {
-    const selectedType = event.target.getAttribute('data-type')
-    this.setState({selectedType})
-  }
-
-  
   render() {
-    const { selectedType } = this.state,
-                              isNowShowingSelected = selectedType === "now_showing",
-                              isTopRatedSelected = selectedType === "top_rated"
+    const { selectedType, nowShowing, topRated } = this.state
     return (
       <div className="App">
         <header className="App-header">
@@ -29,10 +48,9 @@ class App extends Component {
           </p>
         </header>
         <p className="App-intro">Click me for magic</p>
-        <div>
-          <span className={`tab ${isNowShowingSelected ? "selected" : ""}`} data-type="now_showing" onClick={this.onTabChange}>Now Showing</span>
-          <span className={`tab ${isTopRatedSelected ? "selected" : ""}`} data-type="top_rated" onClick={this.onTabChange}>Top Rated</span>
-        </div>
+        <Tabs selectedType={selectedType} onTabSelected={this.onTabSelected} />
+        {selectedType === "top_rated" && topRated && <List data={topRated} /> }
+        {selectedType === "now_showing" && nowShowing && <List data={nowShowing} />}
       </div>
     );
   }
