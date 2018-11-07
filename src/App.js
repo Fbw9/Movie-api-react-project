@@ -1,71 +1,84 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
+import Tab from './components/tab';
+import List from "./components/list";
+import Error from "./components/error";
+import Axios from "axios";
+import { nowShowingUrl , topRatedUrl } from "./components/api/apiConfig";
 import './App.css';
-import Tabs from './components/Tabs'
-import List from './components/List'
-import { nowShowingUrl, topRatedUrl } from './api/ApiConfig'
-import axios from 'axios';
-import Error from './components/Error'
-
 class App extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      selectedType: "now_showing", 
-      nowShowing: [],
-      topRated: [],
+    constructor () {
+        super();
+        this.state = {
+            selected :"showing",
+            data : [],
+            error:""
+        }
     }
-
-  }
-
-  onTabSelected = selectedType => {
-    switch (selectedType) {
-      case "top_rated":
-        axios.get(topRatedUrl).then(response => {
-            this.setState({
-                topRated: response.data.results, 
-                selectedType
+    getMovieData(url){
+        Axios.get(url).then(answer => {
+            let data = [];
+            let error ="";
+            let res = answer.data.results;
+            if(!Array.isArray(res) || (res.length > 0 && !(typeof(res[0]) === "object" && res[0].hasOwnProperty("poster_path")))){
+                error = "some wrong data was send please refresh the page";
+            }
+            data = res;
+            this.setState( s =>{
+                s.error = error;
+                s.data = data;
+                return s;
             })
-        })
-      break;
-      default:
-        axios.get(nowShowingUrl).then(response => {
-            this.setState({
-                nowShowing: response.data.results,
-                selectedType
-            })
-        }).catch(error => {
-            console.log('xxxxxxx', error);
+        }).catch( () => {
+            this.setState ( s => {
+                s.error = "no connection";
+                return s
+            });
         });
     }
-  }
+    onTabChange = e => {
+        let sel = e.target.id;
+        let url ="asdf";
+        if(sel === "showing") {
+            url = nowShowingUrl;
+        } else {
+            url = topRatedUrl;
+        }
+        this.setState(s=>{
+            s.selected = sel;
+            return s
+        })
+        this.getMovieData(url);
 
-  componentDidMount() {
-      this.onTabSelected(this.state.selectedType);
-  }
-  
-  render() {
-    const { selectedType, nowShowing, topRated } = this.state
+    }
+    componentWillMount () {
+        this.getMovieData(nowShowingUrl);
+    };
+    render () {
+        return (
+            <div className="App">
+                <header className="App-header">
+                    <img src={logo} className="App-logo" alt="logo" />
+                    <p>
+                        boring
+                    </p>
+                    <a
+                        className="App-link"
+                        href="https://reactjs.org"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Learn boring
+                    </a>
+                </header>
+                <Tab selected={this.state.selected} onTabChange={this.onTabChange} />
 
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Ryan's Movie List
-          </p>
-        </header>
-        <p className="App-intro">Click me for magic</p>
-        
-        <Tabs selectedType={selectedType} onTabSelected={this.onTabSelected} />
+                {!this.state.error ?
+                    <List data={this.state.data}/> : <Error message={this.state.error} />
+                }
 
-        <Error></Error>
-
-        {selectedType === "top_rated" && topRated.length > 0 && <List data={topRated} /> }
-        {selectedType === "now_showing" && nowShowing.length > 0 && <List data={nowShowing} />}
-      </div>
-    );
-  }
+            </div>
+        );
+    }
 }
-
 export default App;

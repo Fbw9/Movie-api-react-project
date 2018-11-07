@@ -1,17 +1,27 @@
-import React , { Component } from 'react'
-import Card from './Card'
+import React from "react";
+import Card from "./card";
 
-class List extends Component
-{
-    render() {
+
+
+
+class List extends React.Component {
+
+
+    render () {
+        if(this.props.data.length > 0){
+
+
+            return (
+                <div>
+                    {this.props.data.map(id => <Card data={id}/>)}
+                </div>
+            )}
+
+
         return (
-            <React.Fragment>
-                {this.props.data.map((item) => {
-                    return <Card data={item} key={item.id} />
-                })}
-            </React.Fragment>
+            <h2>no results fund</h2>
         )
     }
 }
 
-export default List
+export default List;
